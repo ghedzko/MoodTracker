@@ -1,7 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
 import { MoodOptionType } from '../types';
 import { theme } from '../theme';
+import Reanimated, {
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+
+const ReanimatedPressable = Reanimated.createAnimatedComponent(Pressable);
+
+const imageSrc = require('../../assets/butterflies.png');
 
 const moodOptions: MoodOptionType[] = [
   { emoji: '🧑‍💻', description: 'studious' },
@@ -17,13 +25,37 @@ type MoodPickerProps = {
 
 export const MoodPicker: React.FC<MoodPickerProps> = ({ onSelect }) => {
   const [selectedMood, setSelectedMood] = React.useState<MoodOptionType>();
+  const [hasSelectedValue, setHasSelectedValue] = React.useState(false);
+
+  const buttonStyle = useAnimatedStyle(
+    () => ({
+      opacity: selectedMood ? withTiming(1) : withTiming(0.5),
+      transform:[{ scale: selectedMood ? withTiming(1) : withTiming(0)}]
+    }),
+    [selectedMood],
+  );
 
   const handleSelect = React.useCallback(() => {
     if (selectedMood) {
       onSelect(selectedMood);
       setSelectedMood(undefined);
+      setHasSelectedValue(true);
     }
   }, [onSelect, selectedMood]);
+
+  if (hasSelectedValue) {
+    return (
+      <View style={styles.container}>
+        <Image source={imageSrc} style={styles.image} />
+
+        <Pressable
+          style={styles.button}
+          onPress={() => setHasSelectedValue(false)}>
+          <Text style={styles.buttonText}>Choose another</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -47,13 +79,14 @@ export const MoodPicker: React.FC<MoodPickerProps> = ({ onSelect }) => {
           </View>
         ))}
       </View>
-      <Pressable style={styles.button} onPress={handleSelect}>
+      <ReanimatedPressable
+        style={[styles.button, buttonStyle]}
+        onPress={handleSelect}>
         <Text style={styles.buttonText}>Choose</Text>
-      </Pressable>
+      </ReanimatedPressable>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   moodText: {
     fontSize: 24,
@@ -77,9 +110,9 @@ const styles = StyleSheet.create({
   },
   descriptionText: {
     color: theme.colorPurple,
-    fontWeight: 'bold',
     fontSize: 10,
     textAlign: 'center',
+    fontFamily: theme.fontFamilyBold,
   },
   container: {
     borderWidth: 2,
@@ -87,25 +120,30 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 10,
     padding: 20,
+    justifyContent: 'space-between',
+    height: 230,
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   heading: {
     fontSize: 20,
-    fontWeight: 'bold',
     letterSpacing: 1,
     textAlign: 'center',
-    marginBottom: 20,
+    color: theme.colorWhite,
+    fontFamily: theme.fontFamilyBold,
   },
   button: {
     backgroundColor: theme.colorPurple,
     width: 150,
     borderRadius: 20,
-    marginTop: 20,
     alignSelf: 'center',
     padding: 10,
   },
   buttonText: {
     color: theme.colorWhite,
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: theme.fontFamilyBold,
+  },
+  image: {
+    alignSelf: 'center',
   },
 });
